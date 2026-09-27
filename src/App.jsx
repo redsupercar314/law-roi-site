@@ -9,6 +9,7 @@ import {
   median,
   pct,
 } from './lib/calc.js';
+import { matchScore } from './lib/search.js';
 
 const DEFAULT_PROFILE = {
   gpa: 3.5,
@@ -31,6 +32,7 @@ function outcomeClass(v) {
 
 export default function App() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState('usnews_rank');
   const [sortDir, setSortDir] = useState(1);
   const [outcomeMode, setOutcomeMode] = useState(false);
@@ -51,13 +53,24 @@ export default function App() {
     } catch {}
   }, [dark]);
 
+  const fullProfile = { ...profile, loanRateForDebt: 8.05 };
+
+  const allRows = useMemo(() => {
+    return SCHOOLS.map((s) => ({ s, c: computeFor(s, fullProfile) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
+  const qActive = query.trim().length >= 2;
+
   const rows = useMemo(() => {
-    const full = { ...profile, loanRateForDebt: 8.05 };
-    const computed = SCHOOLS.map((s) => ({ s, c: computeFor(s, full) }));
+    const scored = allRows.map((r) => ({ ...r, score: matchScore(r.s, query) }));
+    const filtered = qActive ? scored.filter((r) => r.score >= 0) : scored;
     const dir = sortDir;
-    computed.sort((a, b) => {
+    filtered.sort((a, b) => {
       let av, bv;
       switch (sortKey) {
+        case 'relevance':
+          av = a.score; bv = b.score; break;
         case 'name':
           return dir * a.s.name.localeCompare(b.s.name);
         case 'chance':
@@ -84,10 +97,10 @@ export default function App() {
       }
       return dir * (av - bv);
     });
-    return computed;
-  }, [profile, sortKey, sortDir]);
+    return filtered;
+  }, [allRows, query, qActive, sortKey, sortDir]);
 
-  const selected = rows.find((r) => r.s.name === selectedName) ?? null;
+  const selected = allRows.find((r) => r.s.name === selectedName) ?? null;
 
   useEffect(() => {
     if (selected) {
@@ -100,23 +113,39 @@ export default function App() {
   }, [selectedName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = useMemo(() => {
-    const full = { ...profile, loanRateForDebt: 8.05 };
-    const all = SCHOOLS.map((s) => ({ s, c: computeFor(s, full) }));
     return {
-      likely: all.filter((r) => r.c.chancePct >= 55).length,
-      total: all.length,
-      reach: all.filter((r) => r.c.chancePct < 25).length,
-      bestDti: Math.min(...all.map((r) => r.c.dti)),
-      medianT50: median(all.filter((r) => r.s.rank <= 50).map((r) => r.c.debtAtGrad)),
+      likely: allRows.filter((r) => r.c.chancePct >= 55).length,
+      total: allRows.length,
+      reach: allRows.filter((r) => r.c.chancePct < 25).length,
+      bestDti: Math.min(...allRows.map((r) => r.c.dti)),
+      medianT50: median(allRows.filter((r) => r.s.rank <= 50).map((r) => r.c.debtAtGrad)),
     };
-  }, [profile]);
+  }, [allRows]);
 
-  const bestRoi = rows.filter((r) => r.c.chancePct >= 40).slice().sort((a, b) => a.c.dti - b.c.dti).slice(0, 6);
-  const gems = rows
-    .filter((r) => r.s.usnews_rank > 50 && r.c.chancePct >= 55 && r.c.dti < 1.6)
+  const bestRoi = allRows.filter((r) => r.c.chancePct >= 40).slice().sort((a, b) => a.c.dti - b.c.dti).slice(0, 6);
+  // Hidden gems must never repeat Best ROI: exclude those schools entirely and
+  // rank by biggest scholarship dollars among likely-or-better safeties outside
+  // the top 50 — i.e. places most likely to pay you to attend.
+  const bestNames = new Set(bestRoi.map((r) => r.s.name));
+  const gems = allRows
+    .filter((r) => r.s.usnews_rank > 50 && r.c.chancePct >= 55 && !bestNames.has(r.s.name))
     .slice()
-    .sort((a, b) => a.c.dti - b.c.dti)
+    .sort((a, b) => b.c.scholDollarY1 - a.c.scholDollarY1)
     .slice(0, 6);
+
+  const handleQuery = (e) => {
+    const v = e.target.value;
+    const was = query.trim().length >= 2;
+    const now = v.trim().length >= 2;
+    setQuery(v);
+    if (!was && now) {
+      setSortKey('relevance');
+      setSortDir(1);
+    } else if (was && !now) {
+      setSortKey('usnews_rank');
+      setSortDir(1);
+    }
+  };
 
   const set = (k) => (e) => {
     const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -295,6 +324,32 @@ export default function App() {
             <h2>All {SCHOOLS.length} schools, ranked by your numbers</h2>
             <div className="note">Click any row for the full loan calculator. Click a column header to sort.</div>
           </div>
+          <div className="searchbar">
+            <input
+              id="schoolSearch"
+              type="search"
+              placeholder='Search schools — try "FSU", "GULC", "WashU", "Brooklyn"…'
+              value={query}
+              onChange={handleQuery}
+              aria-label="Search schools"
+              autoComplete="off"
+            />
+            {query && (
+              <button
+                type="button"
+                className="search-clear"
+                onClick={() => { setQuery(''); setSortKey('usnews_rank'); setSortDir(1); }}
+              >
+                Clear ×
+              </button>
+            )}
+            <span className="search-count">
+              {qActive ? `${rows.length} of ${SCHOOLS.length} schools` : `${SCHOOLS.length} schools`}
+            </span>
+          </div>
+          {qActive && rows.length === 0 && (
+            <p style={{ color: '#8a8371' }}>No schools match “{query.trim()}” — try a full name or another abbreviation.</p>
+          )}
           <div className="table-scroll">
             <table id="schoolTable">
               <thead>
@@ -424,7 +479,7 @@ export default function App() {
         <section id="hiddengems">
           <div className="section-head">
             <h2>Schools worth a second look</h2>
-            <div className="note">Outside the top 50 by prestige, but strong odds, generous aid, and a favorable debt load for you specifically.</div>
+            <div className="note">Likely-or-better odds outside the top 50, ranked by biggest scholarship — always different schools from Best ROI above.</div>
           </div>
           <div className="pick-grid">
             {gems.map((r) => (

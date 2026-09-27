@@ -157,3 +157,19 @@ body.dark .outcome-good{color:#7ed39e;} body.dark .outcome-mid{color:#e2bb68;} b
 body.dark .theme-fab{background:#c99a45; color:#21180e; border-color:#e0b96d;}
 body.dark .theme-fab:hover{background:#e0b96d;}
 
+/* school search bar */
+.searchbar{display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;}
+.searchbar input[type=search]{
+  flex:1; min-width:220px; padding:10px 14px; border:1px solid var(--line); border-radius:999px;
+  background:#fff; font:inherit; font-size:14px; color:var(--ink);
+}
+.searchbar input[type=search]:focus{outline:2px solid var(--wine-light); outline-offset:1px;}
+.search-clear{
+  appearance:none; border:1px solid var(--line); background:transparent; color:var(--ink);
+  padding:8px 14px; border-radius:999px; cursor:pointer; font:inherit; font-size:13px; font-weight:600;
+}
+.search-clear:hover{border-color:var(--gold);}
+.search-count{font-size:12.5px; color:#93805f;}
+body.dark .searchbar input[type=search]{background:#303030; color:#f2f2f0; border-color:#505050;}
+body.dark .search-clear{color:#f1eee8; border-color:#505050;}
+
