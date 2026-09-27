@@ -40,16 +40,27 @@ section:last-child{border-bottom:none;}
 
 /* form */
 .form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:18px 22px;}
-.field label{display:block; font-size:12.5px; font-weight:600; color:#5c4736; margin-bottom:6px;}
-.field .hint{font-size:11.5px; color:#93805f; margin-top:4px;}
+.field{background:#fffdf7; border:1px solid #cbb98d; border-radius:3px; padding:14px 16px 13px; transition:border-color .15s ease;}
+.field:focus-within{border-color:#7a5f22;}
+.field label{display:block; font-family:'Playfair Display',Georgia,serif; font-size:11.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#6b5320; margin-bottom:8px;}
+.field .hint{font-size:11.5px; color:#93805f; margin-top:7px; font-style:italic;}
 input[type=number], select{
-  width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:4px; background:#fff;
-  font:inherit; font-size:14.5px; color:var(--ink);
+  width:100%; padding:11px 12px; border:1px solid #cbb98d; border-radius:2px; background:#fffefb;
+  font:inherit; font-size:15px; color:var(--ink);
+  transition:border-color .15s ease, box-shadow .15s ease;
 }
-input[type=number]:focus, select:focus{outline:2px solid var(--wine-light); outline-offset:1px;}
-.checkrow{display:flex; align-items:center; gap:8px; padding:9px 0 0;}
-.checkrow input{width:16px; height:16px; accent-color:var(--wine);}
-.checkrow label{font-size:13.5px; color:#3a2c22;}
+input[type=number]:hover, select:hover{border-color:#a98f4f;}
+input[type=number]:focus, select:focus{outline:none; border-color:#7a5f22; box-shadow:0 0 0 1px #fffefb, 0 0 0 2px #7a5f22;}
+select{
+  appearance:none; -webkit-appearance:none; padding-right:34px; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%237a5f22' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 13px center;
+}
+input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+input[type=number]{-moz-appearance:textfield; appearance:textfield;}
+.checkrow{display:flex; align-items:center; gap:10px; margin-top:16px; padding:12px 16px; border:1px solid #cbb98d; border-radius:3px; background:#fffdf7;}
+.checkrow input{width:17px; height:17px; accent-color:#5c0f1a; cursor:pointer; flex:none;}
+.checkrow label{font-size:13.5px; color:#3a2c22; cursor:pointer;}
 .btnbar{margin-top:22px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
 button.primary{
   background:var(--wine); color:#f6e9d3; border:1px solid var(--gold); padding:12px 22px; border-radius:4px;
@@ -191,4 +202,21 @@ body.dark .search-clear{color:#f1eee8; border-color:#505050;}
 body.dark .modal-backdrop{background:rgba(0,0,0,.65);}
 body.dark .modal{background:#2b2b2b; border-color:#454545;}
 body.dark .modal h3{color:#e7c27b;}
+
+/* old money refinements: squared hairlines, small-caps controls */
+.modebar{border-radius:3px;}
+.mode-btn,.theme-btn,.search-clear{border-radius:3px; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px;}
+.mode-btn.active{background:var(--wine); color:#f6e9d3; border-color:var(--wine-deep); box-shadow:none;}
+.badge{border-radius:3px; text-transform:uppercase; letter-spacing:.06em; font-size:11px;}
+.stat-card,.pick-card,.table-scroll,.methodology,.modal{border-radius:3px;}
+.hero .stamp{border-radius:2px;}
+.searchbar input[type=search]{border-radius:3px; border-color:#cbb98d; background:#fffefb;}
+.searchbar input[type=search]:focus{outline:none; border-color:#7a5f22; box-shadow:0 0 0 1px #fffefb, 0 0 0 2px #7a5f22;}
+body.dark .field{background:#262626; border-color:#6b5c36;}
+body.dark .field label{color:#d8b96a;}
+body.dark input[type=number],body.dark select{background:#2b2b2b; border-color:#6b5c36;}
+body.dark input[type=number]:focus,body.dark select:focus{box-shadow:0 0 0 1px #2b2b2b, 0 0 0 2px #c99a45; background:#333;}
+body.dark .checkrow{background:#262626; border-color:#6b5c36;}
+body.dark .searchbar input[type=search]{background:#2b2b2b; border-color:#6b5c36;}
+body.dark .mode-btn.active{background:#c99a45; color:#21180e; border-color:#e0b96d;}
 
