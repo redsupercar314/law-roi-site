@@ -429,7 +429,13 @@ export default function App() {
                       </>
                     ) : (
                       <>
-                        <td>{fmt(r.c.scholDollarY1)}</td>
+                        <td>
+                          {r.c.scholPct >= 0.999 ? (
+                            <b className="outcome-good">Full ride</b>
+                          ) : (
+                            <>{fmt(r.c.scholDollarY1)} <span style={{ fontSize: 11.5, color: '#8a8371' }}>({Math.round(r.c.scholPct * 100)}%)</span></>
+                          )}
+                        </td>
                         <td>{fmt(r.c.totalCost)}</td>
                         <td>{fmt(r.c.debtAtGrad)}</td>
                         <td>{fmt(r.c.salary)}</td>
