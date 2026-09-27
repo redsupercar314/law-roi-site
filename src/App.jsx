@@ -105,6 +105,16 @@ export default function App() {
 
   const selected = allRows.find((r) => r.s.name === selectedName) ?? null;
 
+  const sendToCompare = (slot) => {
+    if (!selected) return;
+    if (slot === 'A') setCmpA(selected.s.name);
+    else setCmpB(selected.s.name);
+    setSelectedName(null);
+    requestAnimationFrame(() => {
+      document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth' });
+    });
+  };
+
   useEffect(() => {
     if (selected) {
       setLoan((l) => ({
@@ -443,6 +453,11 @@ export default function App() {
               >
               <button id="closeDetail" onClick={() => setSelectedName(null)} autoFocus>Close ×</button>
               <h3>{selected.s.name}</h3>
+              <div className="cmp-send">
+                <span>Send to head-to-head:</span>
+                <button type="button" className={'mode-btn' + (cmpA === selected.s.name ? ' active' : '')} onClick={() => sendToCompare('A')}>Set as A</button>
+                <button type="button" className={'mode-btn' + (cmpB === selected.s.name ? ' active' : '')} onClick={() => sendToCompare('B')}>Set as B</button>
+              </div>
               <div className="detail-grid">
                 <div>
                   <div className="line-item"><span>USNWR rank</span><span>{selected.s.nonRanked ? 'NR' : '#' + selected.s.usnews_rank}</span></div>
@@ -573,9 +588,11 @@ export default function App() {
             <>
               <div className="verdict">
                 <h3>
-                  {cmp.ptsA === cmp.ptsB
-                    ? `Dead heat — ${cmp.ptsA} to ${cmp.ptsB}`
-                    : `Winner: ${cmp.ptsA > cmp.ptsB ? rowA.s.name : rowB.s.name} (${Math.max(cmp.ptsA, cmp.ptsB)}–${Math.min(cmp.ptsA, cmp.ptsB)})`}
+                  {cmp.ptsA !== cmp.ptsB
+                    ? `Winner: ${cmp.ptsA > cmp.ptsB ? rowA.s.name : rowB.s.name} (${Math.max(cmp.ptsA, cmp.ptsB)}–${Math.min(cmp.ptsA, cmp.ptsB)})`
+                    : cmp.tiebreak
+                      ? `Winner on rank tiebreak: ${cmp.tiebreak === 'A' ? rowA.s.name : rowB.s.name} (${cmp.ptsA}–${cmp.ptsB} on points)`
+                      : `Dead heat — ${cmp.ptsA} to ${cmp.ptsB}`}
                 </h3>
                 <p>
                   {rowA.s.name} takes:{' '}
@@ -634,7 +651,7 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              <p className="footnote">Winner = most of 5 categories: admission chance, scholarship/yr, debt-to-income, starting salary, legal outcomes — all computed from the profile you entered above.</p>
+              <p className="footnote">Winner = most of 5 categories: admission chance, scholarship/yr, debt-to-income, starting salary, legal outcomes — all computed from the profile you entered above. USNWR rank never scores a point; it only breaks ties.</p>
             </>
           )}
         </section>
