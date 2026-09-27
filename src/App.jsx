@@ -112,6 +112,21 @@ export default function App() {
     }
   }, [selectedName]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Modal behavior: Escape closes it, and the background page stays put while open.
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setSelectedName(null);
+    };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [selected]);
+
   const stats = useMemo(() => {
     return {
       likely: allRows.filter((r) => r.c.chancePct >= 55).length,
@@ -394,8 +409,15 @@ export default function App() {
           </div>
 
           {selected && (
-            <div id="detail" className="open">
-              <button id="closeDetail" onClick={() => setSelectedName(null)}>Close ×</button>
+            <div className="modal-backdrop" onClick={() => setSelectedName(null)}>
+              <div
+                className="modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label={selected.s.name}
+                onClick={(e) => e.stopPropagation()}
+              >
+              <button id="closeDetail" onClick={() => setSelectedName(null)} autoFocus>Close ×</button>
               <h3>{selected.s.name}</h3>
               <div className="detail-grid">
                 <div>
@@ -452,6 +474,7 @@ export default function App() {
                     </div>
                   )}
                 </div>
+              </div>
               </div>
             </div>
           )}

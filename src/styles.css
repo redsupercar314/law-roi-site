@@ -173,3 +173,22 @@ body.dark .theme-fab:hover{background:#e0b96d;}
 body.dark .searchbar input[type=search]{background:#303030; color:#f2f2f0; border-color:#505050;}
 body.dark .search-clear{color:#f1eee8; border-color:#505050;}
 
+/* school detail modal popup */
+.modal-backdrop{
+  position:fixed; inset:0; z-index:100;
+  background:rgba(28,18,16,.55);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
+.modal{
+  background:#fff; color:var(--ink);
+  border:1px solid var(--line); border-top:3px solid var(--wine); border-radius:10px;
+  padding:26px 28px; width:min(960px, 100%); max-height:88vh; overflow-y:auto;
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.modal h3{font-size:20px; color:var(--wine-deep);}
+.modal #closeDetail{float:right;}
+body.dark .modal-backdrop{background:rgba(0,0,0,.65);}
+body.dark .modal{background:#2b2b2b; border-color:#454545;}
+body.dark .modal h3{color:#e7c27b;}
+
