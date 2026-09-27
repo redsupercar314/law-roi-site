@@ -78,16 +78,18 @@ export function computeFor(s, profile) {
   if (profile.urm) scholPct += 0.05;
   scholPct = Math.max(0, Math.min(1, scholPct));
 
+  // Tuition path (public residency logic). The scholarship is modeled as a
+  // renewable percentage of EACH year's tuition: subtracting locked Y1
+  // nonresident dollars from cheaper resident Y2/Y3 tuition would otherwise make
+  // "resident all 3 years" look MORE expensive than gaining residency later —
+  // an inversion real award letters avoid by recalibrating aid on residency change.
   let tuitionY1, tuitionY2, tuitionY3;
   if (s.type === 'Public' && s.tuition_nonresident) {
-    if (profile.residency === 'res') {
-      tuitionY1 = tuitionY2 = tuitionY3 = s.tuition;
-    } else if (profile.residency === 'nonres') {
-      tuitionY1 = s.tuition_nonresident;
+    tuitionY1 = profile.residency === 'res' ? s.tuition : s.tuition_nonresident;
+    if (profile.residency === 'nonres') {
       tuitionY2 = s.tuition_nonresident * 1.03;
       tuitionY3 = s.tuition_nonresident * 1.03 * 1.03;
     } else {
-      tuitionY1 = s.tuition_nonresident;
       tuitionY2 = s.tuition * 1.03;
       tuitionY3 = s.tuition * 1.03 * 1.03;
     }
@@ -97,9 +99,9 @@ export function computeFor(s, profile) {
     tuitionY3 = s.tuition * 1.03 * 1.03;
   }
   const scholDollarY1 = tuitionY1 * scholPct;
-  const netY1 = tuitionY1 - scholDollarY1 + s.col;
-  const netY2 = tuitionY2 - scholDollarY1 + s.col * 1.03;
-  const netY3 = tuitionY3 - scholDollarY1 + s.col * 1.03 * 1.03;
+  const netY1 = tuitionY1 * (1 - scholPct) + s.col;
+  const netY2 = tuitionY2 * (1 - scholPct) + s.col * 1.03;
+  const netY3 = tuitionY3 * (1 - scholPct) + s.col * 1.03 * 1.03;
   const totalCost = netY1 + netY2 + netY3;
 
   const rate = profile.loanRateForDebt / 100;

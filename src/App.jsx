@@ -473,7 +473,7 @@ export default function App() {
                   <div className="line-item"><span>Sticker tuition (yr 1)</span><span>{fmt(selected.c.tuitionY1) + (selected.s.type === 'Public' ? ' (residency-adjusted)' : '')}</span></div>
                   <div className="line-item"><span>Est. living costs / yr</span><span>{fmt(selected.s.col)}</span></div>
                   <div className="line-item"><span>Est. admission chance</span><span><span className={'badge ' + selected.c.chanceClass}>{selected.c.chanceLabel}</span> {Math.round(selected.c.chancePct)}%</span></div>
-                  <div className="line-item"><span>Est. scholarship / yr</span><span>{fmt(selected.c.scholDollarY1) + ' (' + Math.round(selected.c.scholPct * 100) + '% of tuition)'}</span></div>
+                  <div className="line-item"><span>Est. scholarship / yr</span><span>{fmt(selected.c.scholDollarY1) + ' (' + Math.round(selected.c.scholPct * 100) + '% of tuition, renewed yearly)'}</span></div>
                   <div className="line-item"><span>Est. total cost, 3 yrs</span><span>{fmt(selected.c.totalCost)}</span></div>
                   <div className="line-item"><span>Est. debt at graduation (with accrued interest)</span><span>{fmt(selected.c.debtAtGrad)}</span></div>
                   <div className="line-item"><span>Grads at firms of 500+ lawyers</span><span>{pct(selected.s.pctBiglaw)}</span></div>
@@ -669,7 +669,7 @@ export default function App() {
             <p>LSAT/GPA medians and splits, acceptance rates, and grant-recipient rates for roughly 20 anchor schools come directly from each school&apos;s 2025 ABA Standard 509 Information Report. See the original build for the full per-school notes.</p>
             <ul>
               <li><b>Admission chance</b> weights the LSAT at roughly 1.6x the GPA (62/38), matching school-published LSAC ACES2 index formulas.</li>
-              <li><b>Scholarship estimate</b> scales with the same index, so a below-band GPA earns less modeled merit money too.</li>
+              <li><b>Scholarship estimate</b> scales with the same index, so a below-band GPA earns less modeled merit money too. It is applied as a renewable percentage of each year&apos;s tuition — real fixed-dollar awards at public schools often shrink when you gain residency, so this keeps the residency paths ordered correctly.</li>
               <li><b>Debt at graduation</b> assumes 3% annual tuition growth, borrowing 100% of net cost each year, capitalizing ~1.5 years of accrued interest.</li>
               <li><b>Salary / DTI</b> uses a bimodal model blended by each school&apos;s modeled % placing in Big Law.</li>
               <li><b>Actual Legal Outcomes toggle</b> uses first-time bar passage plus bar-admission-required employment (JD Advantage excluded).</li>
