@@ -10,6 +10,7 @@ import {
   pct,
 } from './lib/calc.js';
 import { matchScore } from './lib/search.js';
+import { compareRows } from './lib/compare.js';
 
 const DEFAULT_PROFILE = {
   gpa: 3.5,
@@ -38,6 +39,8 @@ export default function App() {
   const [outcomeMode, setOutcomeMode] = useState(false);
   const [dark, setDark] = useState(false);
   const [selectedName, setSelectedName] = useState(null);
+  const [cmpA, setCmpA] = useState('Florida State');
+  const [cmpB, setCmpB] = useState('Georgia');
   const [loan, setLoan] = useState({ rate: 8.05, term: 10, principal: 0, income: 0 });
 
   useEffect(() => {
@@ -147,6 +150,27 @@ export default function App() {
     .slice()
     .sort((a, b) => b.c.scholDollarY1 - a.c.scholDollarY1)
     .slice(0, 6);
+
+  const rowA = allRows.find((r) => r.s.name === cmpA) ?? null;
+  const rowB = allRows.find((r) => r.s.name === cmpB) ?? null;
+  const cmp = rowA && rowB && rowA.s.name !== rowB.s.name ? compareRows(rowA, rowB) : null;
+
+  const fmtCmp = (cat, row) => {
+    const val = cat.get(row);
+    if (val == null) return '—';
+    switch (cat.key) {
+      case 'chance':
+      case 'outcomes':
+        return val.toFixed(1) + '%';
+      case 'schol':
+      case 'salary':
+        return fmt(val);
+      case 'dti':
+        return val.toFixed(2) + '×';
+      default:
+        return String(val);
+    }
+  };
 
   const handleQuery = (e) => {
     const v = e.target.value;
@@ -516,6 +540,103 @@ export default function App() {
               </div>
             ))}
           </div>
+        </section>
+
+        <section id="compare">
+          <div className="section-head">
+            <h2>Head-to-head: pick two schools, get a winner</h2>
+            <div className="note">Scored on your numbers across 5 categories — most points wins.</div>
+          </div>
+          <div className="cmp-grid">
+            <div className="field">
+              <label htmlFor="cmpA">School A</label>
+              <input id="cmpA" list="schoolList" value={cmpA} onChange={(e) => setCmpA(e.target.value)} autoComplete="off" />
+            </div>
+            <div className="field">
+              <label htmlFor="cmpB">School B</label>
+              <input id="cmpB" list="schoolList" value={cmpB} onChange={(e) => setCmpB(e.target.value)} autoComplete="off" />
+            </div>
+          </div>
+          <datalist id="schoolList">
+            {SCHOOLS.map((s) => (
+              <option key={s.name} value={s.name} />
+            ))}
+          </datalist>
+          {!cmp && (
+            <p style={{ color: '#8a8371' }}>
+              {rowA && rowB
+                ? 'Pick two different schools to declare a winner.'
+                : 'Type two school names above (autocomplete will help) to compare them.'}
+            </p>
+          )}
+          {cmp && (
+            <>
+              <div className="verdict">
+                <h3>
+                  {cmp.ptsA === cmp.ptsB
+                    ? `Dead heat — ${cmp.ptsA} to ${cmp.ptsB}`
+                    : `Winner: ${cmp.ptsA > cmp.ptsB ? rowA.s.name : rowB.s.name} (${Math.max(cmp.ptsA, cmp.ptsB)}–${Math.min(cmp.ptsA, cmp.ptsB)})`}
+                </h3>
+                <p>
+                  {rowA.s.name} takes:{' '}
+                  {cmp.results.filter((r) => r.winner === 'A').map((r) => r.name).join('; ') || 'nothing'}
+                </p>
+                <p>
+                  {rowB.s.name} takes:{' '}
+                  {cmp.results.filter((r) => r.winner === 'B').map((r) => r.name).join('; ') || 'nothing'}
+                </p>
+                {cmp.results.some((r) => r.winner === 'tie') && (
+                  <p>Tied: {cmp.results.filter((r) => r.winner === 'tie').map((r) => r.name).join('; ')}</p>
+                )}
+              </div>
+              <div className="table-scroll cmp-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Metric</th>
+                      <th>{rowA.s.name}</th>
+                      <th>{rowB.s.name}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>USNWR rank</td>
+                      <td>{rowA.s.nonRanked ? 'NR' : '#' + rowA.s.usnews_rank}</td>
+                      <td>{rowB.s.nonRanked ? 'NR' : '#' + rowB.s.usnews_rank}</td>
+                    </tr>
+                    <tr>
+                      <td>Type</td>
+                      <td>{rowA.s.type}</td>
+                      <td>{rowB.s.type}</td>
+                    </tr>
+                    <tr>
+                      <td>LSAT 25 / 50 / 75</td>
+                      <td>{rowA.s.lsat25} / {rowA.s.lsat50} / {rowA.s.lsat75}</td>
+                      <td>{rowB.s.lsat25} / {rowB.s.lsat50} / {rowB.s.lsat75}</td>
+                    </tr>
+                    <tr>
+                      <td>GPA 25 / 50 / 75</td>
+                      <td>{rowA.s.gpa25.toFixed(2)} / {rowA.s.gpa50.toFixed(2)} / {rowA.s.gpa75.toFixed(2)}</td>
+                      <td>{rowB.s.gpa25.toFixed(2)} / {rowB.s.gpa50.toFixed(2)} / {rowB.s.gpa75.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <td>Grads at firms of 500+ lawyers</td>
+                      <td>{pct(rowA.s.pctBiglaw)}</td>
+                      <td>{pct(rowB.s.pctBiglaw)}</td>
+                    </tr>
+                    {cmp.results.map((cat) => (
+                      <tr key={cat.key}>
+                        <td>{cat.name}</td>
+                        <td>{cat.winner === 'A' ? <b className="outcome-good">{fmtCmp(cat, rowA)}</b> : fmtCmp(cat, rowA)}</td>
+                        <td>{cat.winner === 'B' ? <b className="outcome-good">{fmtCmp(cat, rowB)}</b> : fmtCmp(cat, rowB)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="footnote">Winner = most of 5 categories: admission chance, scholarship/yr, debt-to-income, starting salary, legal outcomes — all computed from the profile you entered above.</p>
+            </>
+          )}
         </section>
 
         <section id="methodology">
