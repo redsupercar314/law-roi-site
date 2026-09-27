@@ -79,7 +79,7 @@ export default function App() {
         case 'chance':
           av = a.c.chancePct; bv = b.c.chancePct; break;
         case 'scholarship':
-          av = a.c.scholDollarY1; bv = b.c.scholDollarY1; break;
+          av = a.c.scholPct; bv = b.c.scholPct; break;
         case 'netCost':
           av = a.c.totalCost; bv = b.c.totalCost; break;
         case 'debtAtGrad':
