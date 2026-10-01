@@ -79,7 +79,14 @@ export default function App() {
         case 'chance':
           av = a.c.chancePct; bv = b.c.chancePct; break;
         case 'scholarship':
-          av = a.c.scholPct; bv = b.c.scholPct; break;
+          // Need-based-only schools can't be ranked on merit % — always last.
+          if (a.c.needBased || b.c.needBased) {
+            if (!(a.c.needBased && b.c.needBased)) return a.c.needBased ? 1 : -1;
+            av = 0; bv = 0;
+          } else {
+            av = a.c.scholPct; bv = b.c.scholPct;
+          }
+          break;
         case 'netCost':
           av = a.c.totalCost; bv = b.c.totalCost; break;
         case 'debtAtGrad':
@@ -171,6 +178,7 @@ export default function App() {
     switch (cat.key) {
       case 'chance':
       case 'outcomes':
+      case 'biglaw':
         return val.toFixed(1) + '%';
       case 'schol':
       case 'salary':
@@ -430,7 +438,9 @@ export default function App() {
                     ) : (
                       <>
                         <td>
-                          {r.c.scholPct >= 0.999 ? (
+                          {r.c.needBased ? (
+                            <span style={{ fontSize: 12.5, color: '#93805f', fontStyle: 'italic' }}>Need-based</span>
+                          ) : r.c.scholPct >= 0.999 ? (
                             <b className="outcome-good">Full ride</b>
                           ) : (
                             <>{fmt(r.c.scholDollarY1)} <span style={{ fontSize: 11.5, color: '#8a8371' }}>({Math.round(r.c.scholPct * 100)}%)</span></>
@@ -473,7 +483,7 @@ export default function App() {
                   <div className="line-item"><span>Sticker tuition (yr 1)</span><span>{fmt(selected.c.tuitionY1) + (selected.s.type === 'Public' ? ' (residency-adjusted)' : '')}</span></div>
                   <div className="line-item"><span>Est. living costs / yr</span><span>{fmt(selected.s.col)}</span></div>
                   <div className="line-item"><span>Est. admission chance</span><span><span className={'badge ' + selected.c.chanceClass}>{selected.c.chanceLabel}</span> {Math.round(selected.c.chancePct)}%</span></div>
-                  <div className="line-item"><span>Est. scholarship / yr</span><span>{fmt(selected.c.scholDollarY1) + ' (' + Math.round(selected.c.scholPct * 100) + '% of tuition, renewed yearly)'}</span></div>
+                  <div className="line-item"><span>Est. scholarship / yr</span><span>{selected.c.needBased ? 'Need-based only — no merit scholarships (amount depends on your finances)' : fmt(selected.c.scholDollarY1) + ' (' + Math.round(selected.c.scholPct * 100) + '% of tuition, renewed yearly)'}</span></div>
                   <div className="line-item"><span>Est. total cost, 3 yrs</span><span>{fmt(selected.c.totalCost)}</span></div>
                   <div className="line-item"><span>Est. debt at graduation (with accrued interest)</span><span>{fmt(selected.c.debtAtGrad)}</span></div>
                   <div className="line-item"><span>Grads at firms of 500+ lawyers</span><span>{pct(selected.s.pctBiglaw)}</span></div>
@@ -536,7 +546,7 @@ export default function App() {
                 <div className="rank-tag">{r.s.nonRanked ? 'Non-ranked' : 'USNWR #' + r.s.usnews_rank} · {r.s.type}</div>
                 <h4>{r.s.name}</h4>
                 <div className="metric">Admission odds: <b>{r.c.chanceLabel} ({Math.round(r.c.chancePct)}%)</b></div>
-                <div className="metric">Est. scholarship: <b>{fmt(r.c.scholDollarY1)}/yr</b></div>
+                <div className="metric">Est. scholarship: <b>{r.c.needBased ? 'Need-based aid' : fmt(r.c.scholDollarY1) + '/yr'}</b></div>
                 <div className="metric">Debt-to-income: <b>{r.c.dti.toFixed(2)}×</b></div>
                 <div className="metric">Est. starting salary: <b>{fmt(r.c.salary)}</b></div>
               </div>
@@ -555,7 +565,7 @@ export default function App() {
                 <div className="rank-tag">{r.s.nonRanked ? 'Non-ranked' : 'USNWR #' + r.s.usnews_rank} · {r.s.type}</div>
                 <h4>{r.s.name}</h4>
                 <div className="metric">Admission odds: <b>{r.c.chanceLabel} ({Math.round(r.c.chancePct)}%)</b></div>
-                <div className="metric">Est. scholarship: <b>{fmt(r.c.scholDollarY1)}/yr</b></div>
+                <div className="metric">Est. scholarship: <b>{r.c.needBased ? 'Need-based aid' : fmt(r.c.scholDollarY1) + '/yr'}</b></div>
                 <div className="metric">Debt-to-income: <b>{r.c.dti.toFixed(2)}×</b></div>
                 <div className="metric">Est. starting salary: <b>{fmt(r.c.salary)}</b></div>
               </div>
@@ -566,7 +576,7 @@ export default function App() {
         <section id="compare">
           <div className="section-head">
             <h2>Head-to-head: pick two schools, get a winner</h2>
-            <div className="note">Scored on your numbers across 5 categories — most points wins.</div>
+            <div className="note">Scored on your numbers across 6 categories — most points wins.</div>
           </div>
           <div className="cmp-grid">
             <div className="field">
@@ -657,7 +667,7 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              <p className="footnote">Winner = most of 5 categories: admission chance, scholarship/yr, debt-to-income, starting salary, legal outcomes — all computed from the profile you entered above. USNWR rank never scores a point; it only breaks ties.</p>
+              <p className="footnote">Winner = most of 6 categories: admission chance, scholarship/yr, debt-to-income, starting salary, first-time bar passage, BigLaw placement — all computed from the profile you entered above. USNWR rank never scores a point; it only breaks ties. Scholarship ties whenever either school is need-based-only.</p>
             </>
           )}
         </section>
@@ -673,6 +683,8 @@ export default function App() {
               <li><b>Debt at graduation</b> assumes 3% annual tuition growth, borrowing 100% of net cost each year, capitalizing ~1.5 years of accrued interest.</li>
               <li><b>Salary / DTI</b> uses a bimodal model blended by each school&apos;s modeled % placing in Big Law.</li>
               <li><b>Actual Legal Outcomes toggle</b> uses first-time bar passage plus bar-admission-required employment (JD Advantage excluded).</li>
+              <li><b>Need-based-only schools</b> (Harvard, Yale, Stanford) award no merit scholarships per their published policies, so the calculator shows Need-based and prices them at sticker — your real cost depends on your finances, which isn&apos;t modeled.</li>
+              <li><b>Head-to-head</b> scores 6 one-point categories (admission chance, scholarship, debt-to-income, starting salary, bar passage, BigLaw placement); rank only breaks ties, and scholarship ties when either school is need-based-only.</li>
             </ul>
             <p>Use this to build intuition about ranges and trade-offs, not as your final number for any one school — pull that school&apos;s real, current 509 report and its actual financial aid offer before deciding anything.</p>
           </div>

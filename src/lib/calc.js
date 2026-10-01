@@ -78,6 +78,11 @@ export function computeFor(s, profile) {
   if (profile.urm) scholPct += 0.05;
   scholPct = Math.max(0, Math.min(1, scholPct));
 
+  // Need-based-only schools (HYS) award zero merit aid: price at sticker.
+  // Actual cost depends on the student's finances, which isn't modeled.
+  const needBased = s.aidType === 'need';
+  if (needBased) scholPct = 0;
+
   // Tuition path (public residency logic). The scholarship is modeled as a
   // renewable percentage of EACH year's tuition: subtracting locked Y1
   // nonresident dollars from cheaper resident Y2/Y3 tuition would otherwise make
@@ -120,6 +125,7 @@ export function computeFor(s, profile) {
     chanceLabel,
     chanceClass,
     scholPct,
+    needBased,
     scholDollarY1,
     totalCost,
     debtAtGrad,
