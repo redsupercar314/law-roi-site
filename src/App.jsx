@@ -684,6 +684,7 @@ export default function App() {
               <li><b>Salary / DTI</b> uses a bimodal model blended by each school&apos;s modeled % placing in Big Law.</li>
               <li><b>Actual Legal Outcomes toggle</b> uses first-time bar passage plus bar-admission-required employment (JD Advantage excluded).</li>
               <li><b>Need-based-only schools</b> (Harvard, Yale, Stanford) award no merit scholarships per their published policies, so the calculator shows Need-based and prices them at sticker — your real cost depends on your finances, which isn&apos;t modeled.</li>
+              <li><b>Tuition sticker</b> is each school&apos;s 2025 ABA Standard 509 full-time tuition + required fees (resident/nonresident for publics). Schools that report per-credit pricing use a 30-credit 1L load; Baylor (quarter system) and Chicago-Kent (tuition guarantee) keep modeled values.</li>
               <li><b>Head-to-head</b> scores 6 one-point categories (admission chance, scholarship, debt-to-income, starting salary, bar passage, BigLaw placement); rank only breaks ties, and scholarship ties when either school is need-based-only.</li>
             </ul>
             <p>Use this to build intuition about ranges and trade-offs, not as your final number for any one school — pull that school&apos;s real, current 509 report and its actual financial aid offer before deciding anything.</p>
