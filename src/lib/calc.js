@@ -82,32 +82,31 @@ export function computeFor(s, profile) {
   // Actual cost depends on the student's finances, which isn't modeled.
   const needBased = s.aidType === 'need';
   if (needBased) scholPct = 0;
+  // Some programs exclude part-time students from merit aid.
+  if (s.scholAvailable === false) scholPct = 0;
 
   // Tuition path (public residency logic). The scholarship is modeled as a
   // renewable percentage of EACH year's tuition: subtracting locked Y1
   // nonresident dollars from cheaper resident Y2/Y3 tuition would otherwise make
   // "resident all 3 years" look MORE expensive than gaining residency later —
   // an inversion real award letters avoid by recalibrating aid on residency change.
-  let tuitionY1, tuitionY2, tuitionY3;
-  if (s.type === 'Public' && s.tuition_nonresident) {
-    tuitionY1 = profile.residency === 'res' ? s.tuition : s.tuition_nonresident;
-    if (profile.residency === 'nonres') {
-      tuitionY2 = s.tuition_nonresident * 1.03;
-      tuitionY3 = s.tuition_nonresident * 1.03 * 1.03;
-    } else {
-      tuitionY2 = s.tuition * 1.03;
-      tuitionY3 = s.tuition * 1.03 * 1.03;
+  //
+  // Programs run for `s.years` years (3 full-time, 4 part-time).
+  const tuitionForYear = (year) => {
+    const growth = Math.pow(1.03, year - 1);
+    if (s.type === 'Public' && s.tuition_nonresident) {
+      const resident = profile.residency === 'res' || (profile.residency === 'mixed' && year > 1);
+      return (resident ? s.tuition : s.tuition_nonresident) * growth;
     }
-  } else {
-    tuitionY1 = s.tuition;
-    tuitionY2 = s.tuition * 1.03;
-    tuitionY3 = s.tuition * 1.03 * 1.03;
+    return s.tuition * growth;
+  };
+
+  const programYears = Math.max(1, Math.round(s.years || 3));
+  const scholDollarY1 = tuitionForYear(1) * scholPct;
+  let totalCost = 0;
+  for (let year = 1; year <= programYears; year += 1) {
+    totalCost += tuitionForYear(year) * (1 - scholPct) + s.col * Math.pow(1.03, year - 1);
   }
-  const scholDollarY1 = tuitionY1 * scholPct;
-  const netY1 = tuitionY1 * (1 - scholPct) + s.col;
-  const netY2 = tuitionY2 * (1 - scholPct) + s.col * 1.03;
-  const netY3 = tuitionY3 * (1 - scholPct) + s.col * 1.03 * 1.03;
-  const totalCost = netY1 + netY2 + netY3;
 
   const rate = profile.loanRateForDebt / 100;
   const debtAtGrad = totalCost * (1 + rate * 1.5);
@@ -131,7 +130,8 @@ export function computeFor(s, profile) {
     debtAtGrad,
     salary,
     dti,
-    tuitionY1,
+    tuitionY1: tuitionForYear(1),
+    programYears,
   };
 }
 

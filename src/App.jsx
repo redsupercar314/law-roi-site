@@ -37,6 +37,7 @@ export default function App() {
   const [sortKey, setSortKey] = useState('usnews_rank');
   const [sortDir, setSortDir] = useState(1);
   const [outcomeMode, setOutcomeMode] = useState(false);
+  const [partTime, setPartTime] = useState(false);
   const [dark, setDark] = useState(false);
   const [selectedName, setSelectedName] = useState(null);
   const [cmpA, setCmpA] = useState('Florida State');
@@ -58,10 +59,20 @@ export default function App() {
 
   const fullProfile = { ...profile, loanRateForDebt: 8.05 };
 
+  // In part-time mode only schools with a part-time/evening division appear, and
+  // each row is priced from that division's tuition, medians, and four-year length.
+  const activeSchools = useMemo(
+    () =>
+      partTime
+        ? SCHOOLS.filter((s) => s.hasPartTime).map((s) => ({ ...s, ...s.partTime, isPartTime: true }))
+        : SCHOOLS,
+    [partTime],
+  );
+
   const allRows = useMemo(() => {
-    return SCHOOLS.map((s) => ({ s, c: computeFor(s, fullProfile) }));
+    return activeSchools.map((s) => ({ s, c: computeFor(s, fullProfile) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile]);
+  }, [activeSchools, profile]);
 
   const qActive = query.trim().length >= 2;
 
@@ -229,6 +240,19 @@ export default function App() {
     }
   };
 
+  const setProgram = (pt) => {
+    setPartTime(pt);
+    setSelectedName(null);
+    setSortKey('usnews_rank');
+    setSortDir(1);
+    if (pt) {
+      const available = new Set(SCHOOLS.filter((s) => s.hasPartTime).map((s) => s.name));
+      if (!available.has(cmpA)) setCmpA('Fordham');
+      if (!available.has(cmpB) || cmpB === cmpA) setCmpB('Georgetown');
+      if (cmpA === 'Fordham' && cmpB === 'Fordham') setCmpB('Georgetown');
+    }
+  };
+
   const sched = loanSchedule(loan.principal || 0, loan.rate, loan.term);
   const idr = idrMonthlyPayment(loan.income || 0);
 
@@ -239,7 +263,7 @@ export default function App() {
         ['chance', 'Admission Chance'],
         ['barPass', 'First-time Bar Pass'],
         ['barReqEmployment', 'Bar-required Employment'],
-        ['netCost', 'Net Cost (3 yr)'],
+        ['netCost', partTime ? 'Net Cost (4 yr)' : 'Net Cost (3 yr)'],
         ['debtAtGrad', 'Est. Debt at Grad'],
         ['dti', 'Debt-to-Income'],
       ]
@@ -248,7 +272,7 @@ export default function App() {
         ['name', 'School'],
         ['chance', 'Admission Chance'],
         ['scholarship', 'Est. Scholarship / yr'],
-        ['netCost', 'Net Cost (3 yr)'],
+        ['netCost', partTime ? 'Net Cost (4 yr)' : 'Net Cost (3 yr)'],
         ['debtAtGrad', 'Est. Debt at Grad'],
         ['salary', 'Est. Starting Salary'],
         ['dti', 'Debt-to-Income'],
@@ -377,8 +401,32 @@ export default function App() {
               </button>
             </div>
           </div>
+          <div className="modebar pt-bar">
+            <div>
+              <b>Program:</b>{' '}
+              {partTime
+                ? 'part-time / evening JD — a four-year program priced with each school’s part-time tuition and medians.'
+                : 'full-time JD — a three-year program.'}
+            </div>
+            <div className="mode-buttons">
+              <button
+                className={'mode-btn' + (!partTime ? ' active' : '')}
+                type="button"
+                onClick={() => setProgram(false)}
+              >
+                Full-time
+              </button>
+              <button
+                className={'mode-btn' + (partTime ? ' active' : '')}
+                type="button"
+                onClick={() => setProgram(true)}
+              >
+                Part-time
+              </button>
+            </div>
+          </div>
           <div className="section-head">
-            <h2>All {SCHOOLS.length} schools, ranked by your numbers</h2>
+            <h2>All {activeSchools.length} {partTime ? 'part-time ' : ''}schools, ranked by your numbers</h2>
             <div className="note">Click any row for the full loan calculator. Click a column header to sort.</div>
           </div>
           <div className="searchbar">
@@ -401,7 +449,7 @@ export default function App() {
               </button>
             )}
             <span className="search-count">
-              {qActive ? `${rows.length} of ${SCHOOLS.length} schools` : `${SCHOOLS.length} schools`}
+              {qActive ? `${rows.length} of ${activeSchools.length} schools` : `${activeSchools.length} schools`}
             </span>
           </div>
           {qActive && rows.length === 0 && (
@@ -422,7 +470,7 @@ export default function App() {
                 {rows.map((r) => (
                   <tr key={r.s.name} onClick={() => setSelectedName(r.s.name)}>
                     <td>{r.s.nonRanked ? 'NR' : '#' + r.s.usnews_rank}</td>
-                    <td><div className="school-name">{r.s.name}</div><div className="school-sub">{r.s.type}</div></td>
+                    <td><div className="school-name">{r.s.name}</div><div className="school-sub">{r.s.type}{r.s.isPartTime ? ' · Part-time' : ''}</div></td>
                     <td>
                       <span className={'badge ' + r.c.chanceClass}>{r.c.chanceLabel}</span>{' '}
                       <span style={{ fontSize: 11.5, color: '#8a8371' }}>{Math.round(r.c.chancePct)}%</span>
@@ -478,13 +526,16 @@ export default function App() {
                 <div>
                   <div className="line-item"><span>USNWR rank</span><span>{selected.s.nonRanked ? 'NR' : '#' + selected.s.usnews_rank}</span></div>
                   <div className="line-item"><span>Type</span><span>{selected.s.type}</span></div>
+                  {selected.s.isPartTime && (
+                    <div className="line-item"><span>Program</span><span>Part-time / evening JD · 4 years</span></div>
+                  )}
                   <div className="line-item"><span>LSAT 25 / 50 / 75</span><span>{selected.s.lsat25} / {selected.s.lsat50} / {selected.s.lsat75}</span></div>
                   <div className="line-item"><span>GPA 25 / 50 / 75</span><span>{selected.s.gpa25.toFixed(2)} / {selected.s.gpa50.toFixed(2)} / {selected.s.gpa75.toFixed(2)}</span></div>
                   <div className="line-item"><span>Sticker tuition (yr 1)</span><span>{fmt(selected.c.tuitionY1) + (selected.s.type === 'Public' ? ' (residency-adjusted)' : '')}</span></div>
                   <div className="line-item"><span>Est. living costs / yr</span><span>{fmt(selected.s.col)}</span></div>
                   <div className="line-item"><span>Est. admission chance</span><span><span className={'badge ' + selected.c.chanceClass}>{selected.c.chanceLabel}</span> {Math.round(selected.c.chancePct)}%</span></div>
                   <div className="line-item"><span>Est. scholarship / yr</span><span>{selected.c.needBased ? 'Need-based only — no merit scholarships (amount depends on your finances)' : fmt(selected.c.scholDollarY1) + ' (' + Math.round(selected.c.scholPct * 100) + '% of tuition, renewed yearly)'}</span></div>
-                  <div className="line-item"><span>Est. total cost, 3 yrs</span><span>{fmt(selected.c.totalCost)}</span></div>
+                  <div className="line-item"><span>Est. total cost, {selected.c.programYears} yrs</span><span>{fmt(selected.c.totalCost)}</span></div>
                   <div className="line-item"><span>Est. debt at graduation (with accrued interest)</span><span>{fmt(selected.c.debtAtGrad)}</span></div>
                   <div className="line-item"><span>Grads at firms of 500+ lawyers</span><span>{pct(selected.s.pctBiglaw)}</span></div>
                   <div className="line-item"><span>First-time bar passage</span><span>{selected.s.barPass == null ? 'Not available' : selected.s.barPass.toFixed(1) + '% (2024)'}</span></div>
@@ -589,7 +640,7 @@ export default function App() {
             </div>
           </div>
           <datalist id="schoolList">
-            {SCHOOLS.map((s) => (
+            {activeSchools.map((s) => (
               <option key={s.name} value={s.name} />
             ))}
           </datalist>
@@ -639,8 +690,8 @@ export default function App() {
                     </tr>
                     <tr>
                       <td>Type</td>
-                      <td>{rowA.s.type}</td>
-                      <td>{rowB.s.type}</td>
+                      <td>{rowA.s.type}{rowA.s.isPartTime ? ' · Part-time' : ''}</td>
+                      <td>{rowB.s.type}{rowB.s.isPartTime ? ' · Part-time' : ''}</td>
                     </tr>
                     <tr>
                       <td>LSAT 25 / 50 / 75</td>

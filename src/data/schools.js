@@ -2,6 +2,7 @@ import rawSchools from './schools-raw.json';
 import { BAR_PASS_2024 } from './barpass.js';
 import { BAR_REQ_EMPLOYMENT_2024 } from './barreq.js';
 import { VERIFIED_OUTCOMES } from './verified.js';
+import { buildPartTime } from './parttime.js';
 
 // Harvard, Yale, and Stanford award aid on need alone and offer no merit
 // scholarships (per each school's published financial-aid policy).
@@ -28,6 +29,9 @@ function enrich(schools) {
     const verifiedKey = Object.keys(VERIFIED_OUTCOMES).find((k) => s.name.includes(k));
     if (verifiedKey) Object.assign(out, VERIFIED_OUTCOMES[verifiedKey]);
     if (NEED_BASED_ONLY.has(s.name)) out.aidType = 'need';
+    // Part-time / evening division, when the school publishes one.
+    out.partTime = buildPartTime(out);
+    out.hasPartTime = !!out.partTime;
     return out;
   });
 }

@@ -205,6 +205,7 @@ body.dark .modal h3{color:#e7c27b;}
 
 /* old money refinements: squared hairlines, small-caps controls */
 .modebar{border-radius:3px;}
+.pt-bar{margin-top:-8px;}
 .mode-btn,.theme-btn,.search-clear{border-radius:3px; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px;}
 .mode-btn.active{background:var(--wine); color:#f6e9d3; border-color:var(--wine-deep); box-shadow:none;}
 .badge{border-radius:3px; text-transform:uppercase; letter-spacing:.06em; font-size:11px;}
