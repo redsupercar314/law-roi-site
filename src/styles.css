@@ -240,3 +240,138 @@ body.dark .verdict h3{color:#e7c27b;}
 .cmp-send span{font-size:12.5px; color:#93805f;}
 body.dark .cmp-send span{color:#b9b4aa;}
 
+
+/* ---------------------------------------------------------------
+   Atlas: a letterpress-style map plate with one seal per campus.
+   The geometry is pre-projected in src/data/map.js; this block only
+   handles the paper, ink, hover and responsive behaviour.
+   --------------------------------------------------------------- */
+.map-frame{
+  position:relative;
+  background:radial-gradient(120% 90% at 50% 0%, #fdf9ef 0%, #f8f0df 55%, #f1e6d1 100%);
+  border:1px solid #b9a374;
+  padding:18px 20px 14px;
+  box-shadow:0 1px 2px rgba(28,18,16,.06);
+}
+.map-frame::before{
+  content:""; position:absolute; inset:7px; border:1px solid #dccdaf; pointer-events:none;
+}
+.map-head{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:14px 24px;
+  flex-wrap:wrap; padding:0 2px 11px;
+}
+.map-kicker{
+  font-family:'Playfair Display',Georgia,serif; font-size:15px; line-height:1.1;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--wine-deep);
+}
+.map-sub{font-size:12px; color:#8a7a60; margin-top:4px; letter-spacing:.02em;}
+.map-legend{
+  display:flex; align-items:center; gap:13px; flex-wrap:wrap; padding-bottom:1px;
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:#7a6a52;
+}
+.map-legend span{display:inline-flex; align-items:center; gap:6px; white-space:nowrap;}
+.map-swatch{
+  width:8px; height:8px; border-radius:50%; display:inline-block; flex:none;
+  box-shadow:0 0 0 1px rgba(28,18,16,.18);
+}
+.s-reach{background:#8a3b3b;}
+.s-target{background:#b08334;}
+.s-likely{background:#5c7a51;}
+.s-verylikely{background:#2f5c3a;}
+
+.map-viewport{
+  overflow-x:auto; border-top:1px solid #ddceb0; border-bottom:1px solid #ddceb0;
+  scrollbar-width:thin;
+}
+.map-stage{position:relative; min-width:0;}
+.map-svg{display:block; width:100%; height:auto; user-select:none;}
+.map-land{fill:#efe3cc; stroke:#b39b6d; stroke-width:1.15; stroke-linejoin:round;}
+.map-state{fill:none; stroke:#d4c3a0; stroke-width:.7; stroke-linejoin:round;}
+
+.map-marker .map-hit{fill:transparent; stroke:none; cursor:pointer; outline:none;}
+.map-marker .map-dot{stroke:#fffaf0; stroke-width:1; pointer-events:none;}
+.map-halo{fill:none; stroke:var(--gold); stroke-width:1; opacity:.9; pointer-events:none;}
+.map-marker:focus-within .map-dot{stroke:var(--gold); stroke-width:1.7;}
+.map-marker.is-dim{opacity:.16;}
+.map-marker.is-dim .map-hit{pointer-events:none;}
+.c-reach{fill:#8a3b3b;}
+.c-target{fill:#b08334;}
+.c-likely{fill:#5c7a51;}
+.c-verylikely{fill:#2f5c3a;}
+.map-compass{color:#9b8050; opacity:.62;}
+.map-compass circle{fill:none; stroke:currentColor; stroke-width:.8;}
+.map-compass path{fill:currentColor; stroke:none;}
+.map-compass .compass-tail{fill:none; stroke:currentColor; stroke-width:.7;}
+.map-compass text{
+  fill:currentColor; font-family:'Playfair Display',Georgia,serif; font-size:9px;
+  letter-spacing:.14em; text-anchor:middle;
+}
+
+.map-foot{
+  display:flex; justify-content:space-between; gap:6px 24px; flex-wrap:wrap; padding:10px 2px 0;
+}
+.map-note{font-size:11px; line-height:1.5; color:#93805f; font-style:italic;}
+
+.map-tip{
+  position:absolute; z-index:6; pointer-events:none;
+  min-width:188px; max-width:260px;
+  padding:10px 12px 9px;
+  background:#fffdf7; border:1px solid #cbb98d; border-top:2px solid var(--wine);
+  box-shadow:0 10px 26px rgba(28,18,16,.18);
+  transform:translate(-50%, calc(-100% - 12px));
+}
+.map-tip.below{transform:translate(-50%, 16px);}
+.map-tip .tip-name{
+  font-family:'Playfair Display',Georgia,serif; font-size:15px; font-weight:600;
+  color:var(--wine-deep); line-height:1.2;
+}
+.map-tip .tip-sub{font-size:11px; color:#93805f; margin-top:2px;}
+.map-tip .tip-row{
+  display:flex; align-items:center; gap:7px; margin-top:8px;
+  font-size:12px; font-weight:600; color:#3a2c22;
+}
+.map-tip .tip-cta{
+  margin-top:6px; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#a9762e;
+}
+
+body.dark .map-frame{
+  background:radial-gradient(120% 90% at 50% 0%, #272622 0%, #222120 58%, #1d1c19 100%);
+  border-color:#5b5140; box-shadow:0 1px 2px rgba(0,0,0,.38);
+}
+body.dark .map-frame::before{border-color:#3e3a32;}
+body.dark .map-kicker{color:#e7c27b;}
+body.dark .map-sub,body.dark .map-legend,body.dark .map-note{color:#aaa496;}
+body.dark .map-viewport{border-color:#3e3a32;}
+body.dark .map-land{fill:#2c2b27; stroke:#6f6552;}
+body.dark .map-state{stroke:#46423a;}
+body.dark .map-compass{color:#a08f6b;}
+body.dark .map-marker .map-dot{stroke:#1e1d1a;}
+body.dark .map-halo{stroke:#e0b96d;}
+body.dark .c-reach{fill:#cf8a8a;}
+body.dark .c-target{fill:#d8b25e;}
+body.dark .c-likely{fill:#89b084;}
+body.dark .c-verylikely{fill:#7fc497;}
+body.dark .s-reach{background:#cf8a8a;}
+body.dark .s-target{background:#d8b25e;}
+body.dark .s-likely{background:#89b084;}
+body.dark .s-verylikely{background:#7fc497;}
+body.dark .map-tip{
+  background:#1b1a17; border-color:#5b5140; border-top-color:#c99a45;
+  box-shadow:0 10px 26px rgba(0,0,0,.5);
+}
+body.dark .map-tip .tip-name{color:#e7c27b;}
+body.dark .map-tip .tip-sub{color:#aaa496;}
+body.dark .map-tip .tip-row{color:#e4dfd5;}
+body.dark .map-tip .tip-cta{color:#c99a45;}
+
+.map-scroll-hint{display:none;}
+
+@media (max-width:700px){
+  .map-frame{padding:14px 12px 12px;}
+  .map-head{align-items:flex-start; gap:10px 18px;}
+  .map-legend{gap:10px 12px;}
+  .map-stage{min-width:800px;}
+  .map-scroll-hint{display:inline;}
+  .map-foot{display:block;}
+  .map-foot .map-note{display:block; margin-top:4px;}
+}

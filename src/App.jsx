@@ -11,6 +11,7 @@ import {
 } from './lib/calc.js';
 import { matchScore } from './lib/search.js';
 import { compareRows } from './lib/compare.js';
+import MapPanel from './components/MapPanel.jsx';
 
 const DEFAULT_PROFILE = {
   gpa: 3.5,
@@ -122,6 +123,10 @@ export default function App() {
   }, [allRows, query, qActive, sortKey, sortDir]);
 
   const selected = allRows.find((r) => r.s.name === selectedName) ?? null;
+
+  // The atlas dims everything the table's search has filtered out, so the two
+  // views always agree about which schools are in play.
+  const matchedNames = qActive ? new Set(rows.map((r) => r.s.name)) : null;
 
   const sendToCompare = (slot) => {
     if (!selected) return;
@@ -427,7 +432,9 @@ export default function App() {
           </div>
           <div className="section-head">
             <h2>All {activeSchools.length} {partTime ? 'part-time ' : ''}schools, ranked by your numbers</h2>
-            <div className="note">Click any row for the full loan calculator. Click a column header to sort.</div>
+            <div className="note">
+              Click any row for the full loan calculator, or <a href="#atlas">find it on the atlas below</a>. Click a column header to sort.
+            </div>
           </div>
           <div className="searchbar">
             <input
@@ -526,6 +533,9 @@ export default function App() {
                 <div>
                   <div className="line-item"><span>USNWR rank</span><span>{selected.s.nonRanked ? 'NR' : '#' + selected.s.usnews_rank}</span></div>
                   <div className="line-item"><span>Type</span><span>{selected.s.type}</span></div>
+                  {selected.s.location && (
+                    <div className="line-item"><span>Location</span><span>{selected.s.location.city}, {selected.s.location.state}</span></div>
+                  )}
                   {selected.s.isPartTime && (
                     <div className="line-item"><span>Program</span><span>Part-time / evening JD · 4 years</span></div>
                   )}
@@ -584,6 +594,22 @@ export default function App() {
               </div>
             </div>
           )}
+        </section>
+
+        <section id="atlas">
+          <div className="section-head">
+            <h2>The atlas: every school in its place</h2>
+            <div className="note">
+              The same schools and the same modeled odds as the table above, arranged by campus. Click any seal to open its profile.
+            </div>
+          </div>
+          <MapPanel
+            rows={allRows}
+            matchedNames={matchedNames}
+            searchActive={qActive}
+            partTime={partTime}
+            onSelect={setSelectedName}
+          />
         </section>
 
         <section id="suggestions">
